@@ -83,7 +83,7 @@ background-color:white; padding:0px; margin:0; display:block; width: 100%; }
 .wysiwyg-dialog .wysiwyg-dialog-topbar .wysiwyg-dialog-close-wrapper a.wysiwyg-dialog-close-button:hover { background:#666; }
 .wysiwyg-dialog .wysiwyg-dialog-topbar .wysiwyg-dialog-title { font-size:20px; font-weight:bold; padding:5px; }
 .wysiwyg-dialog .wysiwyg-dialog-content { border:1px #ccc solid; border-top:0; padding:15px; background:white; }
-.wysiwyg-dialog-modal-div { position:absolute; top:0px; left:0px; width:100%; height:100%; background-color:rgb(255,255,255); background-color:rgba(0,0,0,0.5); filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#99000000, endColorstr=#99000000); -ms-filter:"progid:DXImageTransform.Microsoft.gradient(startColorstr=#99000000, endColorstr=#99000000)";}
+.wysiwyg-dialog-modal-div { position:absolute; top:0px; left:0px; width:100%; height:100%; background-color:rgb(255,255,255); background-color:rgba(0,0,0,0.5); filter:"progid:DXImageTransform.Microsoft.gradient(startColorstr=#99000000, endColorstr=#99000000)"; -ms-filter:"progid:DXImageTransform.Microsoft.gradient(startColorstr=#99000000, endColorstr=#99000000)";}
 .wysiwyg-dialog-content form.wysiwyg fieldset { border:1px #ccc solid; }
 .wysiwyg-dialog-content form.wysiwyg legend { padding:7px; }
 .wysiwyg-dialog-content form.wysiwyg .form-row { clear:both; padding:4px 0; }
