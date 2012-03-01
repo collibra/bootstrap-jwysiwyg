@@ -50,7 +50,7 @@ case $1 in
 
 		outfile=$JWYSIWYG_ROOT_DIR/$outfile
 		echo -e "Using $outfile"
-		
+
 		if [ ! -e "$outfile" ]; then
 			echo "File $outfile not exists. Create..."
 			touch $outfile
