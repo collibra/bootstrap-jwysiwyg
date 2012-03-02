@@ -178,22 +178,22 @@
 								this.element.height(elementHeight + this.editor.height());
 							}
 
-							this.element.resizable($.extend(true, {
-								alsoResize: this.editor
-							}, this.options.resizeOptions));
-						}
-						
-						this.ui.toolbar.find("li").each(function () {
-							var li = $(this);
+              this.element.resizable($.extend(true, {
+                alsoResize: this.editor
+              }, this.options.resizeOptions));
+            }
+            
+            this.ui.toolbar.find(self.options.markup.itemClass).each(function () {
+              var li = $(this);
 
-							if (li.hasClass("html")) {
-								li.removeClass("active");
-							} else {
-								li.removeClass('disabled');
-							}
-						});
-					} else { //wysiwyg is shown
-						this.saveContent();
+              if (li.hasClass("html")) {
+                li.removeClass(self.options.itemActiveClass);
+              } else {
+                li.removeClass('disabled');
+              }
+            });
+          } else { //wysiwyg is shown
+            this.saveContent();
 
 						$(this.original).css({
 							width:	this.element.outerWidth() - 6,
@@ -211,18 +211,18 @@
 							this.element.resizable("destroy");
 						}
 
-						this.ui.toolbar.find("li").each(function () {
-							var li = $(this);
+            this.ui.toolbar.find(self.options.markup.itemClass).each(function () {
+              var li = $(this);
 
-							if (li.hasClass("html")) {
-								li.addClass("active");
-							} else {
-								if (false === li.hasClass("fullscreen")) {
-									li.removeClass("active").addClass('disabled');
-								}
-							}
-						});
-					}
+              if (li.hasClass("html")) {
+                li.addClass(self.options.itemActiveClass);
+              } else {
+                if (false === li.hasClass("fullscreen")) {
+                  li.removeClass(self.options.itemActiveClass).addClass('disabled');
+                }
+              }
+            });
+          }
 
 					this.viewHTML = !(this.viewHTML);
 				},
@@ -511,7 +511,17 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 			messages: {
 				nonSelection: "Select the text you wish to link"
 			},
-			toolbarHtml: '<ul role="menu" class="toolbar"></ul>',
+			markup: {
+				//<ul role="menu" class="toolbar"></ul>
+        toolbar: '<div role="menu" class="btn-toolbar"></div>',
+        group: "<div class='btn-group'></div>",
+        separator: "<div class='separator'></div>",
+        item: "<a></a>"
+      },
+      itemClass: "btn",
+      itemActiveClass: "btn-warning active",
+      itemDisabledClass: "btn-disabled",
+      iconPrefix: "icon-",
 			removeHeadings: false,
 			replaceDivWithP: false,
 			resizeOptions: false,
@@ -686,154 +696,169 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 		};
 
 		this.ui.appendControls = function () {
-			var ui = this,
-				self = this.self,
-				controls = self.parseControls(),
-				hasVisibleControls	= true, // to prevent separator before first item
-				groups = [],
-				controlsByGroup = {},
-				i,
-				currentGroupIndex, // jslint wants all vars at top of function
-				iterateGroup = function (controlName, control) { //called for every group when adding
-					if (control.groupIndex && currentGroupIndex !== control.groupIndex) {
-						currentGroupIndex = control.groupIndex;
-						hasVisibleControls = false;
-					}
+      var ui = this,
+        self = this.self,
+        controls = self.parseControls(),
+        hasVisibleControls  = true, // to prevent separator before first item
+        groups = [],
+        controlsByGroup = {},
+        i,
+        currentGroupIndex; // jslint wants all vars at top of function
+      
+      
+      $.each(controls, function (name, c) { //sort by groupIndex
+        var index = "empty";
 
-					if (!control.visible) {
-						return;
-					}
+        if (undefined !== c.groupIndex) {
+          if ("" === c.groupIndex) {
+            index = "empty";
+          } else {
+            index = c.groupIndex;
+          }
+        }
 
-					if (!hasVisibleControls) {
-						ui.appendItemSeparator();
-						hasVisibleControls = true;
-					}
+        if (undefined === controlsByGroup[index]) {
+          groups.push(index);
+          controlsByGroup[index] = {};
+        }
+        controlsByGroup[index][name] = c;
+      });
 
-					if (control.custom) {
-						ui.appendItemCustom(controlName, control);
-					} else {
-						ui.appendItem(controlName, control);
-					}
-				};
+      groups.sort(function (a, b) { //just sort group indexes by
+        if ("number" === typeof (a) && typeof (a) === typeof (b)) {
+          return (a - b);
+        } else {
+          a = a.toString();
+          b = b.toString();
 
-			$.each(controls, function (name, c) { //sort by groupIndex
-				var index = "empty";
+          if (a > b) {
+            return 1;
+          }
 
-				if (undefined !== c.groupIndex) {
-					if ("" === c.groupIndex) {
-						index = "empty";
-					} else {
-						index = c.groupIndex;
-					}
-				}
+          if (a === b) {
+            return 0;
+          }
 
-				if (undefined === controlsByGroup[index]) {
-					groups.push(index);
-					controlsByGroup[index] = {};
-				}
-				controlsByGroup[index][name] = c;
-			});
+          return -1;
+        }
+      });
 
-			groups.sort(function (a, b) { //just sort group indexes by
-				if ("number" === typeof (a) && typeof (a) === typeof (b)) {
-					return (a - b);
-				} else {
-					a = a.toString();
-					b = b.toString();
+      if (0 < groups.length) {
+        // set to first index in groups to proper placement of separator
+        currentGroupIndex = groups[0];
+      }
 
-					if (a > b) {
-						return 1;
-					}
+      for (i = 0; i < groups.length; i += 1) {
+        
+        var groupElement = $(self.options.markup.group);
+        
+        $.each(controlsByGroup[groups[i]], function (controlName, control) { //called for every group when adding
+          if (control.groupIndex && currentGroupIndex !== control.groupIndex) {
+            currentGroupIndex = control.groupIndex;
+            hasVisibleControls = false;
+          }
 
-					if (a === b) {
-						return 0;
-					}
+          if (!control.visible) {
+            return;
+          }
 
-					return -1;
-				}
-			});
+          if (!hasVisibleControls) {
+            //ui.appendItemSeparator().appendTo(groupElement);
+            hasVisibleControls = true;
+          }
 
-			if (0 < groups.length) {
-				// set to first index in groups to proper placement of separator
-				currentGroupIndex = groups[0];
-			}
+          if (control.custom) {
+            ui.appendItemCustom(controlName, control).appendTo(groupElement);
+          } else {
+            ui.appendItem(controlName, control).appendTo(groupElement);
+          }
+        });
+        //$("<div><%=bla%></div>".replace(/<%=([\s\S]+?)%>/g, "kwa"))
+        groupElement.appendTo(self.ui.toolbar);
+      }
+    };
 
-			for (i = 0; i < groups.length; i += 1) {
-				$.each(controlsByGroup[groups[i]], iterateGroup);
-			}
-		};
+    this.ui.appendItem = function (name, control, groupElement) {
+      var self = this.self,
+        className = name || "empty",
+        tooltip = control.tooltip || control.command || name || "",
+        icon = control.icon || control.className || control.command || name || "",
+        item = $(self.options.markup.item).append("<i></i>");
+      
+      if (icon.indexOf("url(") === -1) {
+        item.children("i").addClass(self.options.iconPrefix + icon);
+      } else {
+        item.children("i").css("background", "url(\'" + control.icon + "\') no-repeat;");
+      }
+      
+      return item
+        .addClass(self.options.itemClass)
+        .addClass(className)
+        .attr("role","menuitem")
+        .attr("unselectable","on")
+        .attr("title", tooltip)
+        .hover(this.addHoverClass, this.removeHoverClass)
+        .click(function (event) {
+          if ($(this).hasClass(self.options.itemDisabledClass)) {
+            return false;
+          }
 
-		this.ui.appendItem = function (name, control) {
-			var self = this.self,
-				className = control.className || control.command || name || "empty",
-				tooltip = control.tooltip || control.command || name || "";
+          self.triggerControl.apply(self, [name, control]);
 
-			return $('<li role="menuitem" unselectable="on">' + (className) + "</li>")
-				.addClass(className)
-				.attr("title", tooltip)
-				.hover(this.addHoverClass, this.removeHoverClass)
-				.click(function (event) {
-					if ($(this).hasClass("disabled")) {
-						return false;
-					}
-
-					self.triggerControl.apply(self, [name, control]);
-
-					/**
-					* @link https://github.com/akzhan/jwysiwyg/issues/219
-					*/
-					var $target = $(event.target);
-					for (var controlName in self.controls) {
-						if ($target.hasClass(controlName)) {
-							self.ui.toolbar.find("." + controlName).toggleClass("active");
-							self.editorDoc.rememberCommand = true;
-							break;
-						}
-					}
+          /**
+          * @link https://github.com/akzhan/jwysiwyg/issues/219
+          */
+          var $target = $(event.target);
+          for (var controlName in self.controls) {
+            if ($target.hasClass(controlName)) {
+              self.ui.toolbar.find("." + controlName).toggleClass(self.options.itemActiveClass);
+              self.editorDoc.rememberCommand = true;
+              break;
+            }
+          }
                     
-					this.blur();
-					self.ui.returnRange();
-					self.ui.focus();
-					return true;
-				})
-				.appendTo(self.ui.toolbar);
-		};
+          this.blur();
+          self.ui.returnRange();
+          self.ui.focus();
+          return true;
+        });
+    };
 
-		this.ui.appendItemCustom = function (name, control) {
-			var self = this.self,
-				tooltip = control.tooltip || control.command || name || "";
+    this.ui.appendItemCustom = function (name, control) {
+      var self = this.self,
+        tooltip = control.tooltip || control.command || name || "";
 
-			if (control.callback) {
-				$(window).bind("trigger-" + name + ".wysiwyg", control.callback);
-			}
+      if (control.callback) {
+        $(window).bind("trigger-" + name + ".wysiwyg", control.callback);
+      }
 
-			return $('<li role="menuitem" unselectable="on" style="background: url(\'' + control.icon + '\') no-repeat;"></li>')
-				.addClass("custom-command-" + name)
-				.addClass("wysiwyg-custom-command")
-				.addClass(name)
-				.attr("title", tooltip)
-				.hover(this.addHoverClass, this.removeHoverClass)
-				.click(function () {
-					if ($(this).hasClass("disabled")) {
-						return false;
-					}
+      return $('<li role="menuitem" unselectable="on" style="background: url(\'' + control.icon + '\') no-repeat;"></li>')
+        .addClass("custom-command-" + name)
+        .addClass("wysiwyg-custom-command")
+        .addClass(name)
+        .attr("title", tooltip)
+        .hover(this.addHoverClass, this.removeHoverClass)
+        .click(function () {
+          if ($(this).hasClass(self.options.itemDisabledClass)) {
+            return false;
+          }
 
-					self.triggerControl.apply(self, [name, control]);
+          self.triggerControl.apply(self, [name, control]);
 
-					this.blur();
-					self.ui.returnRange();
-					self.ui.focus();
+          this.blur();
+          self.ui.returnRange();
+          self.ui.focus();
 
-					self.triggerControlCallback(name);
-					return true;
-				})
-				.appendTo(self.ui.toolbar);
-		};
+          self.triggerControlCallback(name);
+          return true;
+        })
+        .appendTo(self.ui.toolbar);
+    };
 
-		this.ui.appendItemSeparator = function () {
-			var self = this.self;
-			return $('<li role="separator" class="separator"></li>').appendTo(self.ui.toolbar);
-		};
+    this.ui.appendItemSeparator = function () {
+      var self = this.self;
+      return $(self.options.markup.separator);
+    };
 
 		this.autoSaveFunction = function () {
 			this.saveContent();
@@ -853,21 +878,21 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 					checkActiveStatus = function (cssProperty, cssValue) {
 						var handler;
 
-						if ("function" === typeof (cssValue)) {
-							handler = cssValue;
-							if (handler(el.css(cssProperty).toString().toLowerCase(), self)) {
-								self.ui.toolbar.find("." + className).addClass("active");
-							}
-						} else {
-							if (el.css(cssProperty).toString().toLowerCase() === cssValue) {
-								self.ui.toolbar.find("." + className).addClass("active");
-							}
-						}
-					};
+            if ("function" === typeof (cssValue)) {
+              handler = cssValue;
+              if (handler(el.css(cssProperty).toString().toLowerCase(), self)) {
+                self.ui.toolbar.find("." + className).addClass(self.options.itemActiveClass);
+              }
+            } else {
+              if (el.css(cssProperty).toString().toLowerCase() === cssValue) {
+                self.ui.toolbar.find("." + className).addClass(self.options.itemActiveClass);
+              }
+            }
+          };
 
-				if ("fullscreen" !== className) {
-					self.ui.toolbar.find("." + className).removeClass("active");
-				}
+        if ("fullscreen" !== className) {
+          self.ui.toolbar.find("." + className).removeClass(self.options.itemActiveClass);
+        }
 
 				//activate by allowed tags
 				if (control.tags || (control.options && control.options.tags)) {
@@ -879,9 +904,9 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 							break;
 						}
 
-						if ($.inArray(elm.tagName.toLowerCase(), tags) !== -1) {
-							self.ui.toolbar.find("." + className).addClass("active");
-						}
+            if ($.inArray(elm.tagName.toLowerCase(), tags) !== -1) {
+              self.ui.toolbar.find("." + className).addClass(self.options.itemActiveClass);
+            }
 
 						elm = elm.parentNode;
 					}
@@ -1253,9 +1278,9 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 				newY = (element.height || element.clientHeight || 0)
 				;
 
-			this.options	= this.extendOptions(options);
-			this.original	= element;
-			this.ui.toolbar	= $(this.options.toolbarHtml);
+      this.options  = this.extendOptions(options);
+      this.original = element;
+      this.ui.toolbar = $(this.options.markup.toolbar);
 
 			if ($.browser.msie && parseInt($.browser.version, 10) < 8) {
 				this.options.autoGrow = false;
@@ -1848,13 +1873,13 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 				customControl[name] = $.extend(true, {visible: true, custom: true}, settings);
 				$.extend(true, oWysiwyg.options.controls, customControl);
 
-				// render new toolbar
-				toolbar = $(oWysiwyg.options.toolbarHtml);
-				oWysiwyg.ui.toolbar.replaceWith(toolbar);
-				oWysiwyg.ui.toolbar = toolbar;
-				oWysiwyg.ui.appendControls();
-			});
-		},
+        // render new toolbar
+        toolbar = $(oWysiwyg.options.markup.toolbar);
+        oWysiwyg.ui.toolbar.replaceWith(toolbar);
+        oWysiwyg.ui.toolbar = toolbar;
+        oWysiwyg.ui.appendControls();
+      });
+    },
 
 		clear: function (object) {
 			return object.each(function () {
