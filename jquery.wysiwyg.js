@@ -50,6 +50,7 @@
 			},
 
 			createLink: {
+				icon: "link",
 				groupIndex: 6,
 				visible: true,
 				exec: function () {
@@ -116,7 +117,7 @@
 
 			highlight: {
 				tooltip:     "Highlight",
-				className:   "highlight",
+				icon:   "tint",
 				groupIndex:  1,
 				visible:     false,
 				css: {
@@ -240,6 +241,7 @@
 			},
 
 			indent: {
+				icon: "indent-left",
 				groupIndex: 2,
 				visible: true,
 				tooltip: "Indent"
@@ -253,6 +255,7 @@
 			},
 
 			insertImage: {
+				icon: "picture",
 				groupIndex: 6,
 				visible: true,
 				exec: function () {
@@ -273,6 +276,7 @@
 			},
 
 			insertOrderedList: {
+				icon: "list-alt",
 				groupIndex: 5,
 				visible: true,
 				tags: ["ol"],
@@ -318,6 +322,7 @@
 			},
 
 			justifyCenter: {
+				icon: "align-center",
 				groupIndex: 1,
 				visible: true,
 				tags: ["center"],
@@ -328,6 +333,7 @@
 			},
 
 			justifyFull: {
+				icon: "align-justify",
 				groupIndex: 1,
 				visible: true,
 				css: {
@@ -337,6 +343,7 @@
 			},
 
 			justifyLeft: {
+				icon: "align-left",
 				visible: true,
 				groupIndex: 1,
 				css: {
@@ -346,6 +353,7 @@
 			},
 
 			justifyRight: {
+				icon: "align-right",
 				groupIndex: 1,
 				visible: true,
 				css: {
@@ -371,6 +379,7 @@
 			},
 
 			outdent: {
+				icon: "indent-right",
 				groupIndex: 2,
 				visible: true,
 				tooltip: "Outdent"
