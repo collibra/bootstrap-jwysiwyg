@@ -126,39 +126,3 @@ Also I want to note that 0.97.1 supports ECMAScript strict mode.
 * $.fn.documentSelection has been removed to minimize pollution of $.fn namespace - akzhan
 * Source mode fixed for all browsers (was inspired by 0.8)  - silvermuru
 
-## Version 0.8 (revival)
-
-+ enabled, destroy, removeFormat, save actions added to $('#elt').wysiwyg(action) - fomojola
-+ insertTable action/button added - academo
-+ insertTable and insertImage buttons now support jQuery UI Dialog and SimpleModal plugin - academo
-+ Event handlers supported through events - akzhan
-+ Editor now supports jQuery UI resizable plugin through resizeOptions - akzhan
-* jWysiwyg now wraps Mozilla bug that disables editor creation in AJAX calls - akzhan
-* *MSG_EN* and *TOOLBAR* replaced with $.fn.wysiwyg.defaults/controls - akzhan
-* separators replaced with group indexes - akzhan
-* Directory structure reorganized - academo
-* $.fn.document has been removed to minimize pollution of $.fn namespace - akzhan
-
-## Version 0.7
-
-* Ctrl+B, Ctrl+I and Ctrl+U keystrokes in non-IE browsers now works like IE ones - akzhan
-* insertHtml in non-focused editor works now - akzhan
-* Appearance of toolbar buttons fixed under IE7/8 - ibnteo, mail2lx
-! Code reviewed.
-
-## Version 0.6
-
-* New $().wysiwyg('insertHtml', string) method - akzhan
-* New example (nearby full editor) added - deansofer
-* CSS styling replaced with tags in Firefox -  Svel.Sontz, tobinl, AndreyKostromin ans others
-* Minor problems with focus in non-IE fixed - tyler.schacht
-* Correct setup of form events - Mickael.Hoareau
-* Editor now correctly sets its tabindex on initialization - denis.vysotskiy
-* Insertion of headers in safari fixed - gpearman
-* More correct styling of editor - gamingforever
-* Correct behaviour on IE using https protocol - jf.stgermain
-* Incorrect initialization of editor when content contains "$" characters fixed - JackPDouglas
-* Improved CSS degradability - deansofer
-* Improved ARIA accessability - akzhan
-! Requires jQuery 1.3 or higher! Tested under jQuery 1.4 too.
-
