@@ -119,10 +119,5 @@ Also I want to note that 0.97.1 supports ECMAScript strict mode.
 * Getter methods were broken. Fixed - wordituk
 * headings formatting has been fixed in IE, Firefox and Chrome - kolpak
 
-## Version 0.9 (maintenance release)
 
-* Buttons are unselectable now and have no anchors (CSS reviewed) - mrapczynski
-* Way to return focus to editor has been corrected - mappam0
-* $.fn.documentSelection has been removed to minimize pollution of $.fn namespace - akzhan
-* Source mode fixed for all browsers (was inspired by 0.8)  - silvermuru
 
