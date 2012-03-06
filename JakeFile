@@ -1,11 +1,47 @@
+var fs = require('fs'),
+    path = require('path');
+
+var release = {
+    name: 'bootstrap.wysiwyg.js',
+    description: 'Bootstrap jWYSIWYG Plugin',
+    version: '0.9',
+    paths: {
+        dist: path.normalize('./dist'),
+        build: path.normalize('./build')
+    }
+}
+
+var prep = {
+    engine: "node",
+    compiler: this.engine + " " + release.build_dir + "/uglify.js --unsafe",
+    post_compiler: this.engine + " " + release.build_dir + "/post-compile.js",
+    lint: "jsl"
+}
+
+task('build', ['prepare', 'package', 'minify', 'lint'], function() {
+   console.log('build');
+});
+
+task('package', ['prepare'], function() {
+	console.log('Package only a compiled version of the file.');
+});
+
+task('minify', ['prepare', 'package'], function() {
+
+});
+
+task('lint', ['prepare', 'package'], function() {
+    
+});
+
 task('clean', function() {
-   console.log('Clean!');
+    
 });
 
-task('build', ['clean'], function() {
-	console.log('Build!');
+task('prepare', function() {
+    console.log('==> Set-up globals.')
+    console.log('Creating distribution path... ' + release.dist_path);
+    fs.mkdir(release.dist_path);
 });
 
-task('default', ['build'], function() {
-
-});
+task('default', ['build']);
