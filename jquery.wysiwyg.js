@@ -13,7 +13,7 @@
 
 /*jslint browser: true, forin: true */
 
-(function ($) {
+(function ($, win) {
 	"use strict";
 	/* Wysiwyg namespace: private properties and methods */
 
@@ -50,7 +50,6 @@
 			},
 
 			createLink: {
-				icon: "link",
 				groupIndex: 6,
 				visible: true,
 				exec: function () {
@@ -119,42 +118,47 @@
 				tooltip:     "Highlight",
 				icon:   "tint",
 				groupIndex:  1,
-				visible:     false,
+				visible:     true,
 				css: {
 					backgroundColor: "rgb(255, 255, 102)"
 				},
-				exec: function () {
-					var command, node, selection, args;
-
-					if ($.browser.msie || $.browser.safari) {
+	           exec: function () {
+	             var command, node, selection, args;
+	
+	             if ($.browser.msie || $.browser.safari) {
 						command = "backcolor";
 					} else {
 						command = "hilitecolor";
 					}
-
-					if ($.browser.msie) {
-						node = this.getInternalRange().parentElement();
-					} else {
-						selection = this.getInternalSelection();
-						node = selection.extentNode || selection.focusNode;
-
-						while (node.style === undefined) {
-							node = node.parentNode;
-							if (node.tagName && node.tagName.toLowerCase() === "body") {
-								return;
-							}
-						}
-					}
-
-					if (node.style.backgroundColor === "rgb(255, 255, 102)" ||
-							node.style.backgroundColor === "#ffff66") {
-						args = "#ffffff";
-					} else {
-						args = "#ffff66";
-					}
-
-					this.editorDoc.execCommand(command, false, args);
-				}
+	
+	             var self = this;
+	             node = null;
+	             selection = self.getInternalSelection();
+	             node = selection.extentNode || selection.focusNode;
+	             // Allow for older versions of IE (8 or lower)
+	             if ($.browser.msie && node === null) {
+	               node = self.getInternalRange().parentElement();
+	             }
+	
+	             while (node.style === undefined) {
+	                 node = node.parentNode;
+	                 if (node.tagName && node.tagName.toLowerCase() === "body") {
+	                     return;
+	                 }
+	             }
+	             if (node !== undefined) {
+	               self.ui.checkTargets(node);
+	             }
+	
+	             if (node.style.backgroundColor === "rgb(255, 255, 102)" ||
+	                 node.style.backgroundColor === "#ffff66") {
+	               args = "#ffffff";
+	             } else {
+	               args = "#ffff66";
+	             }
+	
+	             this.editorDoc.execCommand(command, false, args);
+	           }
 			},
 
 			html: {
@@ -703,7 +707,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 		this.ui.addHoverClass = function () {
 			$(this).addClass("wysiwyg-button-hover");
 		};
-
+		
 		this.ui.appendControls = function () {
       var ui = this,
         self = this.self,
@@ -760,7 +764,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
       for (i = 0; i < groups.length; i += 1) {
         
         var groupElement = $(self.options.markup.group);
-        
+        groupElement.appendTo(self.ui.toolbar);
         $.each(controlsByGroup[groups[i]], function (controlName, control) { //called for every group when adding
           if (control.groupIndex && currentGroupIndex !== control.groupIndex) {
             currentGroupIndex = control.groupIndex;
@@ -782,22 +786,35 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
             ui.appendItem(controlName, control).appendTo(groupElement);
           }
         });
-        //$("<div><%=bla%></div>".replace(/<%=([\s\S]+?)%>/g, "kwa"))
-        groupElement.appendTo(self.ui.toolbar);
       }
     };
 
-    this.ui.appendItem = function (name, control, groupElement) {
+    this.ui.appendItem = function (name, control) {
       var self = this.self,
         className = name || "empty",
         tooltip = control.tooltip || control.command || name || "",
         icon = control.icon || control.className || control.command || name || "",
-        item = $(self.options.markup.item).append("<i></i>");
+        item = $(self.options.markup.item).append("<span class='icon'></span>"),
+        fuzzyControls = [
+        "bold", 
+        "underline", 
+        "italic", 
+        "strikeThrough",
+        "subscript",
+        "superscript",
+        "removeFormat"
+        ];
       
       if (icon.indexOf("url(") === -1) {
-        item.children("i").addClass(self.options.iconPrefix + icon);
+        item.children("span.icon").addClass(self.options.iconPrefix + icon);
       } else {
-        item.children("i").css("background", "url(\'" + control.icon + "\') no-repeat;");
+        item.children("span.icon").css("background", "url(\'" + control.icon + "\') no-repeat;");
+      }
+      
+      if ($.browser.msie && fuzzyControls.indexOf(name) !== -1) {
+      	$(item).find("span.icon").on("click", function() {
+			item.trigger("fuzzyClick");
+		});
       }
       
       return item
@@ -807,7 +824,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         .attr("unselectable","on")
         .attr("title", tooltip)
         .hover(this.addHoverClass, this.removeHoverClass)
-        .click(function (event) {
+        .on("click fuzzyClick", function (event) {
           if ($(this).hasClass(self.options.itemDisabledClass)) {
             return false;
           }
@@ -1283,8 +1300,8 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 		this.init = function (element, options) {
 			var self = this,
 				$form = $(element).closest("form"),
-				newX = (element.width || element.clientWidth || 0),
-				newY = (element.height || element.clientHeight || 0)
+				newX = element.width || element.clientWidth || 0,
+				newY = element.height || element.clientHeight || 0
 				;
 
       this.options  = this.extendOptions(options);
@@ -1401,11 +1418,9 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 			$(self.editorDoc).bind("click.wysiwyg", function (event) {
 				self.ui.checkTargets(event.target ? event.target : event.srcElement);
 			});
-
-            /**
-             * @link https://github.com/akzhan/jwysiwyg/issues/251
-             */
-            setInterval(function () {
+	
+	
+			setInterval(function () {
                 var offset = null;
 
                 try {
@@ -1413,7 +1428,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
                     if (range) {
                         offset = {
                             range: range,
-                            parent: $.browser.msie ? range.parentElement() : range.endContainer.parentNode,
+                            parent: $.browser.msie && ~~($.browser.version) < 9 ? range.parentElement() : range.endContainer.parentNode,
                             width: ($.browser.msie ? range.boundingWidth : range.startOffset - range.endOffset) || 0
                         };
                     }
@@ -1423,8 +1438,8 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
                 if (offset && offset.width == 0 && !self.editorDoc.rememberCommand) {
                     self.ui.checkTargets(offset.parent);
                 }
-            }, 400);
-            
+            }, 300);
+			
 			/**
 			 * @link http://code.google.com/p/jwysiwyg/issues/detail?id=20
 			 */
@@ -1444,8 +1459,6 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 						return false;
 					}
 				}
-                
-                self.editorDoc.rememberCommand = false;
 				return true;
 			});
 
@@ -1936,17 +1949,6 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 			}
 
 			return oWysiwyg.getContent();
-		},
-    
-    		getSelection: function (object) {
-  			// no chains because of return
-			var oWysiwyg = object.data("wysiwyg");
-
-			if (!oWysiwyg) {
-				return undefined;
-			}
-
-			return oWysiwyg.getRangeText();
 		},
 
 		init: function (object, options) {
@@ -2496,4 +2498,4 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 	$.fn.getWysiwyg = function () {
 		return this.data("wysiwyg");
 	};
-})(jQuery);
+})(jQuery, window);
