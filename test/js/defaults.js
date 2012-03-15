@@ -75,6 +75,7 @@
 		},
 		justifyLeft: {
 			css: { textAlign: "left" },
+			className: "align-left",
 			tooltip: "Justify Left"
 		},
 		justifyRight: {
