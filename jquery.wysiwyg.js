@@ -161,7 +161,7 @@
              }
       },
 
-      html: {
+      sourceCode: {
         groupIndex: 10,
         visible: false,
         activate: true,
@@ -192,7 +192,7 @@
             this.ui.toolbar.find(self.options.markup.itemClass).each(function () {
               var li = $(this);
 
-              if (li.hasClass("html")) {
+              if (li.hasClass("sourceCode")) {
                 li.removeClass(self.options.itemActiveClass);
               } else {
                 li.removeClass('disabled');
@@ -220,7 +220,7 @@
             this.ui.toolbar.find(self.options.markup.itemClass).each(function () {
               var li = $(this);
 
-              if (li.hasClass("html")) {
+              if (li.hasClass("sourceCode")) {
                 li.addClass(self.options.itemActiveClass);
               } else {
                 if (false === li.hasClass("fullscreen")) {
@@ -586,7 +586,8 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
       "tags",
       "tooltip",
       "visible",
-      "activate"
+      "activate",
+      "aliasFor"
     ];
 
     this.editor     = null;  //jquery iframe holder
@@ -804,11 +805,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         className = name || "empty",
         tooltip = control.tooltip || control.command || name || "",
         icon = control.icon || control.className || control.command || name || "",
-        item = $(self.options.markup.item).append("<span class='icon'></span>"),
-        notControls = [
-          "html",
-          "fullscreen"
-        ];
+        item = $(self.options.markup.item).append("<span class='icon'></span>");
       
       if (icon.indexOf("url(") === -1) {
         item.children("span").addClass(self.options.iconPrefix + icon).removeClass("icon");
@@ -816,19 +813,20 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         item.children("span").css("background", "url(\'" + control.icon + "\') no-repeat;").removeClass("icon");
       }
       
-      if ($.browser.msie && notControls.indexOf(name) === -1) {
+      if ($.browser.msie) {
         item.children("span").on("click", function(e) {
-          self.triggerControl.apply(self, [name, control]);
-          this.blur();
-          self.ui.returnRange();
+          e.preventDefault();
+          e.stopPropagation();
+          self.ui.returnRange()
           self.ui.focus();
-          return true;
+          $(this).parent().trigger("click");
+          return false;
         });
       }
       
       return item
         .addClass(self.options.itemClass)
-        .addClass(className)
+        .addClass(className === "fullScreen" ? "fullscreen" : className)
         .attr("role","menuitem")
         .attr("unselectable","on")
         .attr("title", tooltip)
@@ -1737,6 +1735,11 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
     this.removeFormat = function () {
       if ($.browser.msie) {
         this.ui.focus();
+      }
+      
+      //remove highlight color for browsers like Chrome
+      if ($.browser.webkit) {
+        this.editorDoc.execCommand("backcolor", false, "transparent");
       }
 
       if (this.options.removeHeadings) {
