@@ -1,26 +1,4 @@
-
-debug: 'false'
-
-# Paths for all files
-paths:
-  src: 'src'
-  build: 'build'
-  test: 'test'
-  
 # Output file names
 output:
   default: 'jquery.wysiwyg.js'
   minified: 'jquery.wysiwyg.min.js'
-
-# Source files (in order of import)
-input:
-  - prefix.js
-  - core.js
-  - utils.js
-  - editor.js
-  - dom.js
-  - selection.js  
-  - toolbar.js
-  - dialog.js
-  - plugins.js
-  - suffix.js
