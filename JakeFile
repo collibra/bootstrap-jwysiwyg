@@ -6,8 +6,16 @@ var release = {
     description: 'Bootstrap jWYSIWYG Plugin',
     version: '0.9',
     paths: {
+        src: path.normalize('./src'),
         dist: path.normalize('./dist'),
         build: path.normalize('./build')
+    },
+    files: [
+        'prefix', 'core', 'utils', 'editor', 'dom', 'selection', 
+        'toolbar', 'dialog', 'plugins', 'suffix'
+    ],
+    output: {
+      standard: 'bootstrap.jwysiwyg.js'
     }
 }
 
@@ -19,11 +27,24 @@ var prep = {
 }
 
 task('build', ['prepare', 'package', 'minify', 'lint'], function() {
-   console.log('build');
+   console.log('Building...');
 });
 
 task('package', ['prepare'], function() {
 	console.log('Package only a compiled version of the file.');
+	
+	var src = fcts.compile().join('\n\n');
+	console.log('Compiling source...');
+	
+	var copyright = fcts.createCopyright();
+	console.log('Adding copyright...');
+	
+	var dist_path = path.normalize('./dist/' + release.version);
+	
+	fs.mkdirSync(dist_path, 0755);
+	fs.writeFileSync(dist_path + '/' + release.output.standard, [copyright, src].join('\n\n'));
+	
+	console.log('Done...');
 });
 
 task('minify', ['prepare', 'package'], function() {
@@ -35,13 +56,58 @@ task('lint', ['prepare', 'package'], function() {
 });
 
 task('clean', function() {
-    
+    var dist_folder = path.normalize('./dist/' + release.version);
+    console.log('Cleaning dist folder.');
+    path.exists(dist_folder, function (exists) {
+        if (exists) fs.rmdirSync(dist_folder);
+    });
 });
 
 task('prepare', function() {
     console.log('==> Set-up globals.')
-    console.log('Creating distribution path... ' + release.dist_path);
-    fs.mkdir(release.dist_path);
+    console.log('Creating distribution path... ' + release.paths.dist);
+    fs.mkdir(release.paths.dist);
 });
 
+// Default task is the build task.
 task('default', ['build']);
+
+var fcts = {
+  compile: function() {
+    var _self = this,
+        oldSrc = release.files,
+        newSrc = [];
+        
+    oldSrc.forEach(function(item) {
+      var filePath = path.normalize('./src/' + item + '.js'),
+          src = fs.readFileSync(filePath, 'utf8');
+          
+      newSrc.push(_self.removeClosures(src)); 
+    });
+        
+    return newSrc;    
+  },
+  
+  createCopyright: function() {
+    var copyrightFilePath = path.normalize('./build/copyright.txt'),
+        src = fs.readFileSync(copyrightFilePath, 'utf8');
+    
+    return this.replaceTags(src);
+  },
+  
+  removeClosures: function(src) {
+    src.replace(/\(\s?function\(\s?Wysiwyg\s?\)\s?\{\s?$/i, '');
+    src.replace(/\}\)\(\s?Wysiwyg\s?\);$/, '');
+    
+    return src;
+  },
+  
+  replaceTags: function(src) {
+    var dt = new Date();
+    
+    src.replace('/@DATE/', dt.getFullYear().toString() + '-' + dt.getMonth().toString() + '-' + dt.getDay().toString())
+    src.replace('/@VERSION/', release.version);
+    
+    return src;
+  }
+};
