@@ -124,13 +124,13 @@
         },
              exec: function () {
                var command, node, selection, args;
-  
+
                if ($.browser.msie || $.browser.safari) {
             command = "backcolor";
           } else {
             command = "hilitecolor";
           }
-  
+
                var self = this;
                node = null;
                selection = self.getInternalSelection();
@@ -139,7 +139,7 @@
                if ($.browser.msie && node === null) {
                  node = self.getInternalRange().parentElement();
                }
-  
+
                while (node.style === undefined) {
                    node = node.parentNode;
                    if (node.tagName && node.tagName.toLowerCase() === "body") {
@@ -149,7 +149,7 @@
                if (node !== undefined) {
                  self.ui.checkTargets(node);
                }
-  
+
                if (node.style.backgroundColor === "rgb(255, 255, 102)" ||
                    node.style.backgroundColor === "#ffff66") {
                  args = "#ffffff";
@@ -534,7 +534,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         nonSelection: "Select the text you wish to link"
       },
       markup: {
-        //<ul role="menu" class="toolbar"></ul>
+        toolbarOverlay: '<div class="toolbar-overlay"></div>',
         toolbar: '<div role="menu" class="btn-toolbar"></div>',
         group: "<div class='btn-group'></div>",
         separator: "<div class='separator'></div>",
@@ -796,8 +796,15 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
           } else {
             ui.appendItem(controlName, control).appendTo(groupElement);
           }
+          //align group right for subzero indexes
+          if (control.groupIndex < 0) {
+            groupElement.css({
+              "float": "right"
+            });
+          }
         });
       }
+      
     };
 
     this.ui.appendItem = function (name, control) {
@@ -835,7 +842,6 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
           if ($(this).hasClass(self.options.itemDisabledClass)) {
             return false;
           }
-
           self.triggerControl.apply(self, [name, control]);
 
           /**
@@ -849,7 +855,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
               break;
             }
           }
-                    
+          
           this.blur();
           self.ui.returnRange();
           self.ui.focus();
@@ -876,7 +882,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
             return false;
           }
 
-          self.triggerControl.apply(self, [name, control]);
+          //self.triggerControl.apply(self, [name, control]);
 
           this.blur();
           self.ui.returnRange();
@@ -1314,6 +1320,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
       this.options  = this.extendOptions(options);
       this.original = element;
       this.ui.toolbar = $(this.options.markup.toolbar);
+      this.ui.toolbarOverlay = $(this.options.markup.toolbarOverlay);
 
       if ($.browser.msie && parseInt($.browser.version, 10) < 8) {
         this.options.autoGrow = false;
@@ -1355,6 +1362,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
        * http://code.google.com/p/jwysiwyg/issues/detail?id=96
        */
       this.editor.attr("tabindex", $(element).attr("tabindex"));
+      this.editor.attr("allowtransparency", "true");
 
       this.element = $("<div/>").addClass("wysiwyg");
 
@@ -1394,13 +1402,14 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         saveHandler;
 
       self.ui.appendControls();
-      self.element.append(self.ui.toolbar)
+      self.element
+        .append(self.ui.toolbarOverlay)
+        .append(self.ui.toolbar)
         .append($("<div><!-- --></div>")
           .css({
             clear: "both"
           }))
         .append(self.editor);
-
       self.editorDoc = self.innerDocument();
 
       if (self.isDestroyed) {
@@ -1826,7 +1835,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
     this.triggerControl = function (name, control) {
       var cmd = control.command || name,              //command directly for designMode=on iframe (this.editorDoc)
         args = control["arguments"] || [];
-
+      
       if (control.exec) {
         control.exec.apply(this);  //custom exec function in control, allows DOM changing
       } else {
