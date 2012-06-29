@@ -48,8 +48,53 @@
         visible: false,
         tooltip: "Copy"
       },
+      
+      addLink : {
+          groupIndex: 11,
+          visible: false,
+          className: "addLink",
+          exec: function () {
+            if ($.wysiwyg.controls && $.wysiwyg.controls.link) {
+            	$.wysiwyg.controls.link.addLink(this);
+            }
+          }
+      },
+
+      removeLink : {
+          groupIndex: 11,
+          visible: false,
+          className: "removeLink",
+          exec: function () {
+            if ($.wysiwyg.controls && $.wysiwyg.controls.link) {
+            	$.wysiwyg.controls.link.removeLink(this);
+            }
+          }
+      },
+      
+      editLink : {
+          groupIndex: 11,
+          visible: false,
+          className: "editLink",
+          exec: function () {
+            if ($.wysiwyg.controls && $.wysiwyg.controls.link) {
+                $.wysiwyg.controls.link.editLink(this);
+            }
+          }
+      },
+      
+      clearLink : {
+          groupIndex: 11,
+          visible: false,
+          className: "clearLink",
+          exec: function () {
+            if ($.wysiwyg.controls && $.wysiwyg.controls.link) {
+                $.wysiwyg.controls.link.clearLink(this);
+            }
+          }
+      },
 
       createLink: {
+        id : 'linker-' + Math.floor((Math.random()*1000)+1),
         groupIndex: 6,
         visible: true,
         exec: function () {
@@ -587,9 +632,11 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
       "tooltip",
       "visible",
       "activate",
-      "aliasFor"
+      "aliasFor",
+      "id"
     ];
 
+    this.lastPopover = null;
     this.editor     = null;  //jquery iframe holder
     this.editorDoc    = null;
     this.element    = null;
@@ -628,14 +675,14 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 
         element = element.parentNode;
       }
-      if(!element.tagName && (element.previousSibling || element.nextSibling)) {
+      if(element && !element.tagName && (element.previousSibling || element.nextSibling)) {
         if(element.previousSibling) {
-          if(element.previousSibling.tagName.toLowerCase() == filterTagName) {
+          if(element.previousSibling.tagName && element.previousSibling.tagName.toLowerCase() == filterTagName) {
             return element.previousSibling;
           }
         } 
         if(element.nextSibling) {
-          if(element.nextSibling.tagName.toLowerCase() == filterTagName) {
+          if(element.nextSibling.tagName && element.nextSibling.tagName.toLowerCase() == filterTagName) {
             return element.nextSibling;
           }
         } 
@@ -699,14 +746,14 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         element = element.childNodes[range.startOffset];
       }
       
-      if(!element.tagName && (element.previousSibiling || element.nextSibling)) {
+      if(element && !element.tagName && (element.previousSibiling || element.nextSibling)) {          
         if(element.previousSibiling) {
-          if(element.previousSibiling.tagName.toLowerCase() == filterTagName) {
+          if(element.previousSibiling.tagName && element.previousSibiling.tagName.toLowerCase() == filterTagName) {
             return element.previousSibiling;
           }
         } 
         if(element.nextSibling) {
-          if(element.nextSibling.tagName.toLowerCase() == filterTagName) {
+          if(element.nextSibling.tagName && element.nextSibling.tagName.toLowerCase() == filterTagName) {
             return element.nextSibling;
           }
         } 
@@ -812,7 +859,8 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         className = name || "empty",
         tooltip = control.tooltip || control.command || name || "",
         icon = control.icon || control.className || control.command || name || "",
-        item = $(self.options.markup.item).append("<span class='icon'></span>");
+        item = $(self.options.markup.item).append("<span class='icon'></span>"),
+        id = control.id || "";
       
       if (icon.indexOf("url(") === -1) {
         item.children("span").addClass(self.options.iconPrefix + icon).removeClass("icon");
@@ -837,6 +885,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         .attr("role","menuitem")
         .attr("unselectable","on")
         .attr("title", tooltip)
+        .attr("id", id)
         .hover(this.addHoverClass, this.removeHoverClass)
         .on("click fuzzyClick", function (event) {
           if ($(this).hasClass(self.options.itemDisabledClass)) {
@@ -1317,6 +1366,9 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
         newY = (element.height || element.clientHeight || 0)
         ;
 
+      if(element.id) {
+        this.controls.createLink.id = 'linker-' + element.id;
+      }
       this.options  = this.extendOptions(options);
       this.original = element;
       this.ui.toolbar = $(this.options.markup.toolbar);
@@ -1347,6 +1399,7 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
           this.editor.css("height", newY.toString() + "px");
         }
       }
+      
       /** 
        * Automagically add id to iframe if textarea has its own when possible 
        * ( http://github.com/akzhan/jwysiwyg/issues/245 )
@@ -1399,7 +1452,8 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
       var self = this.self,
         stylesheet,
         growHandler,
-        saveHandler;
+        saveHandler,
+        wrapper = $("<div class='texteditor-iframe-wrapper'></div>").append(self.editor);
 
       self.ui.appendControls();
       self.element
@@ -1409,9 +1463,9 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
           .css({
             clear: "both"
           }))
-        .append(self.editor);
+        .append(wrapper);
       self.editorDoc = self.innerDocument();
-
+      
       if (self.isDestroyed) {
         return null;
       }
@@ -1651,6 +1705,13 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
           });
         });
       }
+      
+      if($.browser.msie && $.browser.version == "7.0") {
+        $(self.editor.get(0).contentWindow.document.body).css({
+          "background-color": "transparent"
+        });
+      }
+      
       $(self.original).trigger('ready.jwysiwyg', [self.editorDoc, self]);
     };
 
@@ -1888,6 +1949,25 @@ html: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
       }
 
       return content;
+    };
+    
+    this.getOffset = function(selector) {
+        var iframe = core ? ((core.dom.select(selector))[0]).contentWindow : ($(selector)[0]).contentWindow;
+        var scroll = {
+                y: iframe.scrollY || iframe.pageYOffset || iframe.document.lastChild.scrollTop,
+                x: iframe.scrollX || iframe.pageXOffset || iframe.document.lastChild.scrollLeft
+        };
+        selector = core ? (core.dom.select(selector))[0] : $(selector)[0];
+        var _x = 0;
+        var _y = 0;
+        while( selector && !isNaN( selector.offsetLeft ) && !isNaN( selector.offsetTop ) ) {
+            _x += selector.offsetLeft - selector.scrollLeft;
+            _y += selector.offsetTop - selector.scrollTop;
+            selector = selector.offsetParent;
+        }
+        _y = _y - scroll.y;
+        _x = _x - scroll.x;
+        return { top: _y, left: _x };
     };
   }
 
