@@ -32,9 +32,9 @@
 			"Indent": "インデント",
 			"Insert Horizontal Rule": "水平線<HR>を挿入",
 			"Insert image": "画像を挿入",
-			"Insert Ordered List": "リストの追加",
+			"Insert Ordered List": "順序付きリストの追加",
 			"Insert table": "テーブルを挿入",
-			"Insert Unordered List": "下線を追加",
+			"Insert Unordered List": "順序なしリストを追加",
 			"Italic": "イタリック",
 			"Justify Center": "中央寄せ",
 			"Justify Full": "左右一杯に揃える",
@@ -72,10 +72,10 @@
 				"Width": "横幅",
 				"Height": "高さ",
 				"Original W x H": "オリジナル 横 x 高",
-				"Float": "",
-				"None": "",
-				"Left": "",
-				"Right": ""
+				"Float": "フロート",
+				"None": "画像無し",
+				"Left": "左寄せ",
+				"Right": "右寄せ"
 			},
 
 			link: {
